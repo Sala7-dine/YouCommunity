@@ -1,37 +1,19 @@
-    <!DOCTYPE html>
-    <html lang="fr">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>EventHub - Dashboard</title>
-        @vite('resources/css/app.css')
-        <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-    </head>
-    <body class="font-['Plus_Jakarta_Sans'] bg-gray-50">
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EventHub - Dashboard</title>
+    @vite('resources/css/app.css')
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="font-['Plus_Jakarta_Sans'] bg-gray-50">
+    <x-app-layout>
         <div class="min-h-screen flex">
             <!-- Sidebar -->
             <div class="w-64 bg-white border-r hidden lg:block">
                 <div class="h-full flex flex-col">
-                    <!-- Logo -->
-                    <div class="px-6 py-8 border-b">
-                        <a href="/" class="text-2xl font-bold">
-                            <span class="text-blue-600">Event</span>Hub
-                        </a>
-                    </div>
-
-                    <!-- Profile -->
-                    <div class="p-6 border-b">
-                        <div class="flex items-center space-x-3">
-                            <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
-                                <span class="text-blue-600 font-medium">JD</span>
-                            </div>
-                            <div>
-                                <p class="font-medium text-gray-900">John Doe</p>
-                                <p class="text-sm text-gray-500">Organisateur</p>
-                            </div>
-                        </div>
-                    </div>
-
+    
                     <!-- Navigation -->
                     <nav class="flex-1 p-4">
                         <div class="space-y-1">
@@ -61,7 +43,7 @@
                             </a>
                         </div>
                     </nav>
-
+    
                     <!-- Bottom Links -->
                     <div class="p-4 border-t">
                         <a href="#" class="flex items-center px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-lg">
@@ -74,7 +56,7 @@
                     </div>
                 </div>
             </div>
-
+    
             <!-- Main Content -->
             <div class="flex-1">
                 <!-- Top Bar -->
@@ -86,7 +68,7 @@
                         </button>
                     </div>
                 </div>
-
+    
                 <!-- Dashboard Content -->
                 <div class="p-8">
                     <!-- Stats Grid -->
@@ -118,7 +100,7 @@
                                 </div>
                             </div>
                         </div>
-
+    
                         <div class="bg-white p-6 rounded-xl border">
                             <div class="flex items-center">
                                 <div class="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center mr-4">
@@ -132,7 +114,7 @@
                                 </div>
                             </div>
                         </div>
-
+    
                         <div class="bg-white p-6 rounded-xl border">
                             <div class="flex items-center">
                                 <div class="w-12 h-12 rounded-full bg-yellow-100 flex items-center justify-center mr-4">
@@ -147,7 +129,7 @@
                             </div>
                         </div>
                     </div>
-
+    
                     <!-- Recent Events -->
                     <div class="bg-white rounded-xl border">
                         <div class="p-6 border-b">
@@ -170,7 +152,7 @@
                                             <td class="py-4 pr-6">
                                                 <div class="flex items-center">
                                                     <img src="https://picsum.photos/seed/1/40/40" 
-                                                        class="w-8 h-8 rounded-lg mr-3">
+                                                         class="w-8 h-8 rounded-lg mr-3">
                                                     <span class="font-medium text-gray-900">Festival de Jazz</span>
                                                 </div>
                                             </td>
@@ -205,5 +187,7 @@
                 </div>
             </div>
         </div>
-    </body>
-    </html>
+    </x-app-layout>
+  
+</body>
+</html>
