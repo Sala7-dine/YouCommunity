@@ -12,7 +12,8 @@ class EventController extends Controller
      */
     public function index()
     {
-        //
+        $events = Event::paginate(10);
+        return view('dashboard/index', compact('events'));
     }
 
     /**
@@ -20,7 +21,7 @@ class EventController extends Controller
      */
     public function create()
     {
-        //
+        return view('events.create');
     }
 
     /**
@@ -28,7 +29,31 @@ class EventController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $request->validate([
+            'titre' => 'required|string|max:255',
+            'description' => 'required',
+            'lieu' => 'required|string',
+            'latitude' => 'required|numeric',
+            'longitude' => 'required|numeric',
+            'date_heure' => 'required|date',
+            'categorie' => 'required|string',
+            'max_participants' => 'nullable|integer|min:1',
+        ]);
+
+        Event::create([
+            'titre' => $request->titre,
+            'description' => $request->description,
+            'lieu' => $request->lieu,
+            'latitude' => $request->latitude,
+            'longitude' => $request->longitude,
+            'date_heure' => $request->date_heure,
+            'categorie' => $request->categorie,
+            'user_id' => Auth::id(),
+            'max_participants' => $request->max_participants,
+        ]);
+
+        return redirect()->route('events.index')->with('success', 'Événement créé avec succès.');
+        
     }
 
     /**
@@ -36,7 +61,7 @@ class EventController extends Controller
      */
     public function show(Event $event)
     {
-        //
+        return view('events.show', compact('event'));
     }
 
     /**
@@ -44,7 +69,7 @@ class EventController extends Controller
      */
     public function edit(Event $event)
     {
-        //
+        return view('events.edit', compact('event'));
     }
 
     /**
@@ -52,7 +77,20 @@ class EventController extends Controller
      */
     public function update(Request $request, Event $event)
     {
-        //
+        $request->validate([
+            'titre' => 'required|string|max:255',
+            'description' => 'required',
+            'lieu' => 'required|string',
+            'latitude' => 'required|numeric',
+            'longitude' => 'required|numeric',
+            'date_heure' => 'required|date',
+            'categorie' => 'required|string',
+            'max_participants' => 'nullable|integer|min:1',
+        ]);
+
+        $event->update($request->all());
+
+        return redirect()->route('events.index')->with('success', 'Événement mis à jour.');
     }
 
     /**
@@ -60,6 +98,7 @@ class EventController extends Controller
      */
     public function destroy(Event $event)
     {
-        //
+        $event->delete();
+        return redirect()->route('events.index')->with('success', 'Événement supprimé.');
     }
 }
