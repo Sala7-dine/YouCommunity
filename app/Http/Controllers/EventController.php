@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Event;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class EventController extends Controller
 {
@@ -12,8 +13,23 @@ class EventController extends Controller
      */
     public function index()
     {
-        $events = Event::paginate(10);
-        return view('dashboard/index', compact('events'));
+        // Récupérer uniquement les événements de l'utilisateur connecté
+        $events = Event::where('user_id', Auth::id())
+            ->orderBy('date_heure', 'asc')
+            ->paginate(10);
+
+        // Compter les statistiques pour l'utilisateur
+        $stats = [
+            'total' => Event::where('user_id', Auth::id())->count(),
+            'upcoming' => Event::where('user_id', Auth::id())
+                ->where('date_heure', '>', now())
+                ->count(),
+            'past' => Event::where('user_id', Auth::id())
+                ->where('date_heure', '<', now())
+                ->count(),
+        ];
+
+        return view('dashboard/index', compact('events', 'stats'));
     }
 
     /**
@@ -24,7 +40,7 @@ class EventController extends Controller
         return view('events.create');
     }
 
-    /**
+    /** 
      * Store a newly created resource in storage.
      */
     public function store(Request $request)
@@ -98,7 +114,15 @@ class EventController extends Controller
      */
     public function destroy(Event $event)
     {
+        // Vérifier si l'utilisateur actuel est le propriétaire de l'événement
+        if ($event->user_id !== auth()->id()) {
+            return redirect()->route('dashboard')
+                ->with('error', 'Vous n\'êtes pas autorisé à supprimer cet événement.');
+        }
+
         $event->delete();
-        return redirect()->route('events.index')->with('success', 'Événement supprimé.');
+        
+        return redirect()->route('dashboard')
+            ->with('success', 'L\'événement a été supprimé avec succès.');
     }
 }
