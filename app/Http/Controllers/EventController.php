@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Event;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class EventController extends Controller
 {
@@ -37,39 +38,54 @@ class EventController extends Controller
      */
     public function create()
     {
-        return view('events.create');
+        return redirect()->route('dashboard');
     }
 
-    /** 
+    /**
      * Store a newly created resource in storage.
      */
     public function store(Request $request)
     {
-        $request->validate([
-            'titre' => 'required|string|max:255',
-            'description' => 'required',
-            'lieu' => 'required|string',
-            'latitude' => 'required|numeric',
-            'longitude' => 'required|numeric',
-            'date_heure' => 'required|date',
-            'categorie' => 'required|string',
-            'max_participants' => 'nullable|integer|min:1',
-        ]);
+        try {
+            $validated = $request->validate([
+                'titre' => 'required|string|max:255',
+                'description' => 'required|string',
+                'lieu' => 'required|string',
+                'date_heure' => 'required|date',
+                'categorie' => 'required|string',
+                'max_participants' => 'nullable|integer|min:1',
+                'latitude' => 'nullable|numeric',  // Rendu optionnel pour le moment
+                'longitude' => 'nullable|numeric', // Rendu optionnel pour le moment
+            ]);
 
-        Event::create([
-            'titre' => $request->titre,
-            'description' => $request->description,
-            'lieu' => $request->lieu,
-            'latitude' => $request->latitude,
-            'longitude' => $request->longitude,
-            'date_heure' => $request->date_heure,
-            'categorie' => $request->categorie,
-            'user_id' => Auth::id(),
-            'max_participants' => $request->max_participants,
-        ]);
+            // Ajouter l'ID de l'utilisateur aux données validées
+            $validated['user_id'] = Auth::id();
 
-        return redirect()->route('events.index')->with('success', 'Événement créé avec succès.');
-        
+            // Si latitude/longitude ne sont pas fournis, utiliser des valeurs par défaut
+            if (!isset($validated['latitude'])) {
+                $validated['latitude'] = 0;
+            }
+            if (!isset($validated['longitude'])) {
+                $validated['longitude'] = 0;
+            }
+
+            // Créer l'événement
+            $event = Event::create($validated);
+
+            Log::info('Événement créé avec succès', ['event' => $event]);
+
+            return redirect()->route('dashboard')
+                ->with('success', 'Événement créé avec succès.');
+
+        } catch (\Exception $e) {
+            Log::error('Erreur lors de la création de l\'événement', [
+                'error' => $e->getMessage(),
+                'data' => $request->all()
+            ]);
+
+            return redirect()->route('dashboard')
+                ->with('error', 'Une erreur est survenue lors de la création de l\'événement.');
+        }
     }
 
     /**

@@ -11,7 +11,15 @@ class Event extends Model
     use HasFactory;
 
     protected $fillable = [
-        'titre', 'description', 'lieu', 'latitude', 'longitude', 'date_heure', 'categorie', 'user_id', 'max_participants'
+        'titre',
+        'description',
+        'lieu',
+        'latitude',
+        'longitude',
+        'date_heure',
+        'categorie',
+        'max_participants',
+        'user_id'
     ];
 
     // Convertir automatiquement ces champs en instances Carbon

@@ -7,7 +7,7 @@
     @vite('resources/css/app.css')
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
-<body class="font-['Plus_Jakarta_Sans'] bg-gray-100">
+<body class="font-['Plus_Jakarta_Sans'] bg-gray-100" x-data="{ showCreateModal: false }">
     <div class="min-h-screen flex">
         <!-- Sidebar -->
         <div class="w-64 bg-white border-r hidden lg:block">
@@ -165,10 +165,13 @@
                 <div class="mb-6">
                     <div class="flex items-center justify-between mb-6">
                         <h2 class="text-xl font-bold text-gray-900">Mes Événements</h2>
-                        <a href="{{ route('events.create') }}" 
-                           class="px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors">
+                        <button @click="showCreateModal = true" 
+                                class="px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors flex items-center gap-2">
+                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                            </svg>
                             Créer un événement
-                        </a>
+                        </button>
                     </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -292,6 +295,128 @@
         </div>
     </div>
 
+    <!-- Modale de création -->
+    <div x-show="showCreateModal" 
+         x-cloak
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         class="fixed inset-0 z-50">
+        
+        <!-- Overlay -->
+        <div class="fixed inset-0 bg-black bg-opacity-50" 
+             @click="showCreateModal = false"></div>
+
+        <!-- Contenu de la modale -->
+        <div class="fixed inset-0 z-50 overflow-y-auto">
+            <div class="flex min-h-screen items-center justify-center p-4">
+                <div class="relative bg-white rounded-2xl shadow-xl w-full max-w-2xl"
+                     @click.outside="showCreateModal = false">
+                    
+                    <!-- En-tête de la modale -->
+                    <div class="flex items-center justify-between p-6 border-b">
+                        <h2 class="text-xl font-semibold text-gray-900">Créer un nouvel événement</h2>
+                        <button @click="showCreateModal = false" class="text-gray-400 hover:text-gray-500">
+                            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                            </svg>
+                        </button>
+                    </div>
+
+                    <!-- Formulaire -->
+                    <form action="{{ route('events.store') }}" method="POST" class="p-6">
+                        @csrf
+                        <div class="space-y-6">
+                            <!-- Titre -->
+                            <div>
+                                <label for="titre" class="block text-sm font-medium text-gray-700">Titre</label>
+                                <input type="text" name="titre" id="titre" required
+                                       class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                @error('titre')
+                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            <!-- Description -->
+                            <div>
+                                <label for="description" class="block text-sm font-medium text-gray-700">Description</label>
+                                <textarea name="description" id="description" rows="3" required
+                                          class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"></textarea>
+                                @error('description')
+                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            <!-- Lieu -->
+                            <div>
+                                <label for="lieu" class="block text-sm font-medium text-gray-700">Lieu</label>
+                                <input type="text" name="lieu" id="lieu" required
+                                       class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                @error('lieu')
+                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            <!-- Date et heure -->
+                            <div>
+                                <label for="date_heure" class="block text-sm font-medium text-gray-700">Date et heure</label>
+                                <input type="datetime-local" name="date_heure" id="date_heure" required
+                                       class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                @error('date_heure')
+                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            <!-- Catégorie -->
+                            <div>
+                                <label for="categorie" class="block text-sm font-medium text-gray-700">Catégorie</label>
+                                <select name="categorie" id="categorie" required
+                                        class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                    <option value="">Sélectionnez une catégorie</option>
+                                    <option value="Sport">Sport</option>
+                                    <option value="Musique">Musique</option>
+                                    <option value="Art">Art</option>
+                                    <option value="Tech">Tech</option>
+                                    <option value="Business">Business</option>
+                                </select>
+                                @error('categorie')
+                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            <!-- Nombre max de participants -->
+                            <div>
+                                <label for="max_participants" class="block text-sm font-medium text-gray-700">
+                                    Nombre maximum de participants (optionnel)
+                                </label>
+                                <input type="number" name="max_participants" id="max_participants" min="1"
+                                       class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                @error('max_participants')
+                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                @enderror
+                            </div>
+                        </div>
+
+                        <!-- Boutons d'action -->
+                        <div class="mt-6 flex items-center justify-end gap-3">
+                            <button type="button" @click="showCreateModal = false"
+                                    class="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-500">
+                                Annuler
+                            </button>
+                            <button type="submit"
+                                    class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                                Créer l'événement
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Ajouter le JavaScript pour la modale -->
     <script>
         function showDeleteModal(eventId) {
@@ -344,7 +469,30 @@
     </script>
 
     <!-- Ajouter Alpine.js pour le menu déroulant -->
-    <script src="//unpkg.com/alpinejs" defer></script>
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script>
+        // Script pour la géolocalisation via l'API Google Maps
+        function initAutocomplete() {
+            const input = document.getElementById('lieu');
+            const autocomplete = new google.maps.places.Autocomplete(input);
+            
+            autocomplete.addListener('place_changed', function() {
+                const place = autocomplete.getPlace();
+                if (place.geometry) {
+                    document.querySelector('input[name="latitude"]').value = place.geometry.location.lat();
+                    document.querySelector('input[name="longitude"]').value = place.geometry.location.lng();
+                }
+            });
+        }
+    </script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=VOTRE_CLE_API&libraries=places&callback=initAutocomplete" async defer></script>
+
+    <!-- Ajouter ces styles dans votre head ou fichier CSS -->
+    <style>
+        [x-cloak] {
+            display: none !important;
+        }
+    </style>
 
 </body>
 </html>
