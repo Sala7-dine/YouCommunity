@@ -22,6 +22,7 @@ return new class extends Migration
             $table->string('categorie'); 
             $table->foreignId('user_id')->constrained()->onDelete('cascade'); 
             $table->integer('max_participants')->nullable(); 
+            $table->string('image')->nullable();
             $table->timestamps();
         });
     }

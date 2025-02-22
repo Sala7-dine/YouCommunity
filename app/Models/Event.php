@@ -13,6 +13,7 @@ class Event extends Model
     protected $fillable = [
         'titre',
         'description',
+        'image',
         'lieu',
         'latitude',
         'longitude',
@@ -33,4 +34,22 @@ class Event extends Model
     {
         return $this->belongsTo(User::class);
     }
+
+
+    public function participants()
+    {
+        return $this->hasMany(Participant::class);
+    }
+    
+    public function isUserParticipating($userId)
+    {
+        return $this->participants()->where('user_id', $userId)->exists();
+    }
+    
+    public function getUserParticipationStatus($userId)
+    {
+        $participant = $this->participants()->where('user_id', $userId)->first();
+        return $participant ? $participant->status : null;
+    }
+
 }

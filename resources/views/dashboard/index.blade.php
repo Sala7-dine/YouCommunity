@@ -13,53 +13,9 @@
     editingEvent: null
 }">
     <div class="min-h-screen flex">
-        <!-- Sidebar -->
-        <div class="w-64 bg-white border-r hidden lg:block">
-            <div class="h-full flex flex-col">
-    
-                <!-- Navigation -->
-                <nav class="flex-1 p-4">
-                    <div class="space-y-1">
-                        <a href="#" class="flex items-center px-4 py-2 text-blue-600 bg-blue-50 rounded-lg">
-                            <svg class="w-5 h-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
-                            </svg>
-                            Tableau de bord
-                        </a>
-                        <a href="#" class="flex items-center px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-lg">
-                            <svg class="w-5 h-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                            </svg>
-                            Mes événements
-                        </a>
-                        <a href="#" class="flex items-center px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-lg">
-                            <svg class="w-5 h-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-                            </svg>
-                            Participants
-                        </a>
-                        <a href="#" class="flex items-center px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-lg">
-                            <svg class="w-5 h-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
-                            </svg>
-                            Paiements
-                        </a>
-                    </div>
-                </nav>
-    
-                <!-- Bottom Links -->
-                <div class="p-4 border-t">
-                    <a href="#" class="flex items-center px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-lg">
-                        <svg class="w-5 h-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                        </svg>
-                        Paramètres
-                    </a>
-                </div>
-            </div>
-        </div>
-    
+        <!-- Include Sidebar -->
+        @include('layouts.sidebar')
+
         <!-- Main Content -->
         <div class="flex-1 flex flex-col">
             <!-- Header avec menu de déconnexion -->
@@ -68,47 +24,7 @@
                     <div class="flex items-center justify-between">
                         <h1 class="text-xl font-semibold text-gray-900">Dashboard</h1>
                         
-                        <!-- Menu utilisateur -->
-                        <div class="relative" x-data="{ open: false }">
-                            <button @click="open = !open" class="flex items-center space-x-4 focus:outline-none">
-                                <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
-                                    <span class="text-blue-600 font-medium">
-                                        {{ substr(Auth::user()->name, 0, 2) }}
-                                    </span>
-                                </div>
-                                <div class="hidden md:block text-left">
-                                    <div class="text-sm font-medium text-gray-900">
-                                        {{ Auth::user()->name }}
-                                    </div>
-                                    <div class="text-sm text-gray-500">
-                                        {{ Auth::user()->email }}
-                                    </div>
-                                </div>
-                                <svg class="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
-                                </svg>
-                            </button>
-
-                            <!-- Menu déroulant -->
-                            <div x-show="open" 
-                                 @click.away="open = false"
-                                 class="absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white ring-1 ring-black ring-opacity-5"
-                                 role="menu">
-                                <a href="{{ route('profile.edit') }}" 
-                                   class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                                   role="menuitem">
-                                    Mon profil
-                                </a>
-                                <form method="POST" action="{{ route('logout') }}">
-                                    @csrf
-                                    <button type="submit" 
-                                            class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                                            role="menuitem">
-                                        Déconnexion
-                                    </button>
-                                </form>
-                            </div>
-                        </div>
+                    
                     </div>
                 </div>
             </header>
@@ -246,6 +162,38 @@
                                         @endif
                                     </div>
                                 </div>
+
+                                <!-- Dans la carte d'événement -->
+                                <div class="flex items-center justify-between mt-4">
+                                    <div class="flex items-center space-x-2">
+                                        <span class="text-sm text-gray-600">
+                                            {{ $event->participants->count() }} participant(s)
+                                        </span>
+                                        @if($event->max_participants)
+                                            <span class="text-sm text-gray-600">
+                                                / {{ $event->max_participants }} max
+                                            </span>
+                                        @endif
+                                    </div>
+                                    
+                                    @if($event->user_id !== Auth::id())
+                                        <div x-data="{ status: '{{ $event->getUserParticipationStatus(Auth::id()) }}' }">
+                                            <!-- Boutons RSVP -->
+                                            <div class="flex items-center space-x-2">
+                                                <button @click="participate('accepted')"
+                                                        :class="status === 'accepted' ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-700'"
+                                                        class="px-3 py-1 rounded-lg text-sm font-medium transition-colors">
+                                                    Participer
+                                                </button>
+                                                <button @click="participate('declined')"
+                                                        :class="status === 'declined' ? 'bg-red-600 text-white' : 'bg-gray-100 text-gray-700'"
+                                                        class="px-3 py-1 rounded-lg text-sm font-medium transition-colors">
+                                                    Décliner
+                                                </button>
+                                            </div>
+                                        </div>
+                                    @endif
+                                </div>
                             </div>
                         @empty
                             <div class="col-span-full">
@@ -331,7 +279,7 @@
                     </div>
 
                     <!-- Formulaire -->
-                    <form action="{{ route('events.store') }}" method="POST" class="p-6">
+                    <form action="{{ route('events.store') }}" method="POST" class="p-6" enctype="multipart/form-data">
                         @csrf
                         <div class="space-y-6">
                             <!-- Titre -->
@@ -399,6 +347,28 @@
                                 <input type="number" name="max_participants" id="max_participants" min="1"
                                        class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                                 @error('max_participants')
+                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            <!-- Image -->
+                            <div class="mt-4">
+                                <label for="image" class="block text-sm font-medium text-gray-700">
+                                    Image de l'événement
+                                </label>
+                                <div class="mt-1 flex items-center">
+                                    <input type="file" 
+                                           name="image" 
+                                           id="image"
+                                           accept="image/*"
+                                           class="block w-full text-sm text-gray-500
+                                                  file:mr-4 file:py-2 file:px-4
+                                                  file:rounded-full file:border-0
+                                                  file:text-sm file:font-semibold
+                                                  file:bg-blue-50 file:text-blue-700
+                                                  hover:file:bg-blue-100">
+                                </div>
+                                @error('image')
                                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                                 @enderror
                             </div>
@@ -654,6 +624,29 @@ document.addEventListener('alpine:init', () => {
             display: none !important;
         }
     </style>
+
+    <!-- Ajouter ce script pour gérer les participations -->
+    <script>
+    function participate(eventId, status) {
+        fetch(`/events/${eventId}/participate`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+            },
+            body: JSON.stringify({ status: status })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Mettre à jour l'interface
+                this.status = data.status;
+            } else {
+                alert(data.message);
+            }
+        });
+    }
+    </script>
 
 </body>
 </html>
