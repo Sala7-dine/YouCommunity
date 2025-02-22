@@ -47,33 +47,47 @@ class EventController extends Controller
      */
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'titre' => 'required|string|max:255',
-            'description' => 'required|string',
-            'lieu' => 'required|string',
-            'date_heure' => 'required|date',
-            'categorie' => 'required|string',
-            'max_participants' => 'nullable|integer|min:1',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
-        ]);
-
         try {
-            // Gérer l'upload de l'image
-            if ($request->hasFile('image')) {
-                $imagePath = $request->file('image')->store('events', 'public');
-                $validated['image'] = $imagePath;
-            }
+            $validated = $request->validate([
+                'titre' => 'required|string|max:255',
+                'description' => 'required|string',
+                'lieu' => 'required|string',
+                'date_heure' => 'required|date',
+                'categorie' => 'required|string',
+                'max_participants' => 'nullable|integer|min:1',
+                'image' => 'nullable|string'
+            ]);
 
+            // Gérer l'upload de l'image
+            // if ($request->hasFile('image')) {
+            //     $image = $request->file('image');
+            //     $imageName = time() . '.' . $image->getClientOriginalExtension();
+            //     $image->move(public_path('images'), $imageName);
+            //     $validated['image'] = 'images/' . $imageName;
+            // }
+
+            // Ajouter des valeurs par défaut pour latitude et longitude
+            $validated['latitude'] = 0;
+            $validated['longitude'] = 0;
+
+            // Créer l'événement
             $event = Event::create([
                 ...$validated,
-                'user_id' => Auth::id(),
+                'user_id' => auth()->id(),
             ]);
 
             return redirect()->route('dashboard')
                 ->with('success', 'Événement créé avec succès.');
+
         } catch (\Exception $e) {
+            Log::error('Event creation failed', [
+                'error' => $e->getMessage(),
+                'data' => $request->all()
+            ]);
+
             return redirect()->back()
-                ->with('error', 'Une erreur est survenue lors de la création de l\'événement.');
+                ->with('error', 'Une erreur est survenue lors de la création de l\'événement : ' . $e->getMessage())
+                ->withInput();
         }
     }
 
@@ -82,7 +96,7 @@ class EventController extends Controller
      */
     public function show(Event $event)
     {
-        return view('events.show', compact('event'));
+        return view('Event.detaile', compact('event'));
     }
 
     /**
@@ -170,6 +184,6 @@ class EventController extends Controller
         $events = $query->orderBy('date_heure', 'asc')->paginate(12);
         $categories = Event::select('categorie')->distinct()->pluck('categorie');
 
-        return view('Event/discover', compact('events', 'categories'));
+        return view('Event.discover', compact('events', 'categories'));
     }
 }

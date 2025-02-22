@@ -6,6 +6,7 @@
     <title>EventHub - Dashboard</title>
     @vite('resources/css/app.css')
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
 </head>
 <body class="font-['Plus_Jakarta_Sans'] bg-gray-100" x-data="{ 
     showCreateModal: false, 
@@ -98,31 +99,40 @@
                         @forelse($events as $event)
                             <div class="bg-white rounded-2xl border group hover:shadow-lg transition-all">
                                 <!-- Event Image/Header -->
-                                <div class="relative h-48 rounded-t-2xl bg-gradient-to-r from-blue-600 to-indigo-600 p-6">
-                                    <div class="flex items-center justify-between">
-                                        <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium bg-white/20 text-white">
-                                            {{ $event->categorie }}
-                                        </span>
-                                        <div class="opacity-0 group-hover:opacity-100 transition-opacity">
-                                            <div class="flex items-center gap-2">
-                                                <button @click="showEditModal = true; editingEvent = {{ $event }}" 
-                                                        class="p-2 text-white/80 hover:text-white rounded-lg hover:bg-white/20">
-                                                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                                                              d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
-                                                    </svg>
-                                                </button>
-                                                <button onclick="showDeleteModal({{ $event->id }})"
-                                                        class="p-2 text-white/80 hover:text-white rounded-lg hover:bg-white/20">
-                                                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                                                              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                                                    </svg>
-                                                </button>
+                                <div class="relative h-48 rounded-t-2xl overflow-hidden">
+                                    @if($event->image)
+                                        <img src="{{ $event->image }}" alt="{{ $event->titre }}" class="w-full h-full object-cover">
+                                        <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent">
+                                    @else
+                                        <div class="h-full bg-gradient-to-r from-blue-600 to-indigo-600">
+                                    @endif
+                                        <div class="absolute inset-0 p-6 flex flex-col justify-between">
+                                            <div class="flex items-center justify-between">
+                                                <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium bg-white/20 text-white">
+                                                    {{ $event->categorie }}
+                                                </span>
+                                                <div class="opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <div class="flex items-center gap-2">
+                                                        <button @click="showEditModal = true; editingEvent = {{ $event }}" 
+                                                                class="p-2 text-white/80 hover:text-white rounded-lg hover:bg-white/20">
+                                                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                                                      d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
+                                                            </svg>
+                                                        </button>
+                                                        <button onclick="showDeleteModal({{ $event->id }})"
+                                                                class="p-2 text-white/80 hover:text-white rounded-lg hover:bg-white/20">
+                                                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                                                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                                            </svg>
+                                                        </button>
+                                                    </div>
+                                                </div>
                                             </div>
+                                            <h3 class="text-xl font-bold text-white mt-auto">{{ $event->titre }}</h3>
                                         </div>
                                     </div>
-                                    <h3 class="text-xl font-bold text-white mt-auto">{{ $event->titre }}</h3>
                                 </div>
 
                                 <!-- Event Content -->
@@ -160,39 +170,51 @@
                                                 </span>
                                             </div>
                                         @endif
-                                    </div>
-                                </div>
 
-                                <!-- Dans la carte d'événement -->
-                                <div class="flex items-center justify-between mt-4">
-                                    <div class="flex items-center space-x-2">
-                                        <span class="text-sm text-gray-600">
-                                            {{ $event->participants->count() }} participant(s)
-                                        </span>
-                                        @if($event->max_participants)
-                                            <span class="text-sm text-gray-600">
-                                                / {{ $event->max_participants }} max
-                                            </span>
+                                        <!-- Bouton de participation -->
+                                        @if(Auth::id() != $event->user_id)
+                                            @php
+                                                $participation = $event->participants->where('user_id', Auth::id())->first();
+                                            @endphp
+                                            
+                                            <div class="mt-4">
+                                                @if(!$participation)
+                                                    <button onclick="participate({{ $event->id }}, 'pending')" 
+                                                            class="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                                                        Participer
+                                                    </button>
+                                                @else
+                                                    <div class="flex flex-col items-center gap-2">
+                                                        @switch($participation->status)
+                                                            @case('pending')
+                                                                <span class="text-sm text-yellow-600 bg-yellow-50 px-2 py-1 rounded-lg">
+                                                                    En attente de confirmation
+                                                                </span>
+                                                                <button onclick="cancelParticipation({{ $event->id }})" 
+                                                                        class="text-sm text-red-600 hover:text-red-700">
+                                                                    Annuler ma participation
+                                                                </button>
+                                                                @break
+                                                            @case('accepted')
+                                                                <span class="text-sm text-green-600 bg-green-50 px-2 py-1 rounded-lg">
+                                                                    Participation confirmée
+                                                                </span>
+                                                                <button onclick="cancelParticipation({{ $event->id }})" 
+                                                                        class="text-sm text-red-600 hover:text-red-700">
+                                                                    Annuler ma participation
+                                                                </button>
+                                                                @break
+                                                            @case('declined')
+                                                                <span class="text-sm text-red-600 bg-red-50 px-2 py-1 rounded-lg">
+                                                                    Participation refusée
+                                                                </span>
+                                                                @break
+                                                        @endswitch
+                                                    </div>
+                                                @endif
+                                            </div>
                                         @endif
                                     </div>
-                                    
-                                    @if($event->user_id !== Auth::id())
-                                        <div x-data="{ status: '{{ $event->getUserParticipationStatus(Auth::id()) }}' }">
-                                            <!-- Boutons RSVP -->
-                                            <div class="flex items-center space-x-2">
-                                                <button @click="participate('accepted')"
-                                                        :class="status === 'accepted' ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-700'"
-                                                        class="px-3 py-1 rounded-lg text-sm font-medium transition-colors">
-                                                    Participer
-                                                </button>
-                                                <button @click="participate('declined')"
-                                                        :class="status === 'declined' ? 'bg-red-600 text-white' : 'bg-gray-100 text-gray-700'"
-                                                        class="px-3 py-1 rounded-lg text-sm font-medium transition-colors">
-                                                    Décliner
-                                                </button>
-                                            </div>
-                                        </div>
-                                    @endif
                                 </div>
                             </div>
                         @empty
@@ -248,145 +270,115 @@
     </div>
 
     <!-- Modale de création -->
-    <div x-show="showCreateModal" 
-         x-cloak
-         x-transition:enter="transition ease-out duration-300"
-         x-transition:enter-start="opacity-0"
-         x-transition:enter-end="opacity-100"
-         x-transition:leave="transition ease-in duration-200"
-         x-transition:leave-start="opacity-100"
-         x-transition:leave-end="opacity-0"
-         class="fixed inset-0 z-50">
+    <div x-show="showCreateModal" class="fixed inset-0 z-50 overflow-y-auto" x-cloak>
+        <div class="fixed inset-0 bg-black bg-opacity-50"></div>
         
-        <!-- Overlay -->
-        <div class="fixed inset-0 bg-black bg-opacity-50" 
-             @click="showCreateModal = false"></div>
+        <div class="relative min-h-screen flex items-center justify-center p-4">
+            <div class="relative bg-white rounded-xl shadow-xl w-full max-w-2xl">
+                <div class="flex items-center justify-between p-4 border-b">
+                    <h2 class="text-xl font-semibold text-gray-900">Créer un événement</h2>
+                    <button @click="showCreateModal = false" class="text-gray-400 hover:text-gray-500">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
 
-        <!-- Contenu de la modale -->
-        <div class="fixed inset-0 z-50 overflow-y-auto">
-            <div class="flex min-h-screen items-center justify-center p-4">
-                <div class="relative bg-white rounded-2xl shadow-xl w-full max-w-2xl"
-                     @click.outside="showCreateModal = false">
+                <form action="{{ route('events.store') }}" method="POST" enctype="multipart/form-data" class="p-6">
+                    @csrf
                     
-                    <!-- En-tête de la modale -->
-                    <div class="flex items-center justify-between p-6 border-b">
-                        <h2 class="text-xl font-semibold text-gray-900">Créer un nouvel événement</h2>
-                        <button @click="showCreateModal = false" class="text-gray-400 hover:text-gray-500">
-                            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                            </svg>
-                        </button>
+                    
+
+                    <!-- Titre -->
+                    <div class="mb-4">
+                        <label for="titre" class="block text-sm font-medium text-gray-700">Titre</label>
+                        <input type="text" 
+                               name="titre" 
+                               id="titre" 
+                               required
+                               class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                     </div>
 
-                    <!-- Formulaire -->
-                    <form action="{{ route('events.store') }}" method="POST" class="p-6" enctype="multipart/form-data">
-                        @csrf
-                        <div class="space-y-6">
-                            <!-- Titre -->
-                            <div>
-                                <label for="titre" class="block text-sm font-medium text-gray-700">Titre</label>
-                                <input type="text" name="titre" id="titre" required
-                                       class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                                @error('titre')
-                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                                @enderror
-                            </div>
+                    <!-- Image -->
+                    <div class="mb-4">
+                        <label for="image" class="block text-sm font-medium text-gray-700">Image de l'événement</label>
+                        <input type="text" 
+                               name="image" 
+                               id="image" 
+                               class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                    </div>
 
-                            <!-- Description -->
-                            <div>
-                                <label for="description" class="block text-sm font-medium text-gray-700">Description</label>
-                                <textarea name="description" id="description" rows="3" required
-                                          class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"></textarea>
-                                @error('description')
-                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                                @enderror
-                            </div>
+                    <!-- Description -->
+                    <div class="mb-4">
+                        <label for="description" class="block text-sm font-medium text-gray-700">Description</label>
+                        <textarea name="description" 
+                                  id="description" 
+                                  required
+                                  rows="3" 
+                                  class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"></textarea>
+                    </div>
 
-                            <!-- Lieu -->
-                            <div>
-                                <label for="lieu" class="block text-sm font-medium text-gray-700">Lieu</label>
-                                <input type="text" name="lieu" id="lieu" required
-                                       class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                                @error('lieu')
-                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                                @enderror
-                            </div>
+                    <!-- Lieu -->
+                    <div class="mb-4">
+                        <label for="lieu" class="block text-sm font-medium text-gray-700">Lieu</label>
+                        <input type="text" 
+                               name="lieu" 
+                               id="lieu" 
+                               required
+                               class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                    </div>
 
-                            <!-- Date et heure -->
-                            <div>
-                                <label for="date_heure" class="block text-sm font-medium text-gray-700">Date et heure</label>
-                                <input type="datetime-local" name="date_heure" id="date_heure" required
-                                       class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                                @error('date_heure')
-                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                                @enderror
-                            </div>
+                    <!-- Date et heure -->
+                    <div class="mb-4">
+                        <label for="date_heure" class="block text-sm font-medium text-gray-700">Date et heure</label>
+                        <input type="datetime-local" 
+                               name="date_heure" 
+                               id="date_heure" 
+                               required
+                               class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                    </div>
 
-                            <!-- Catégorie -->
-                            <div>
-                                <label for="categorie" class="block text-sm font-medium text-gray-700">Catégorie</label>
-                                <select name="categorie" id="categorie" required
-                                        class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                                    <option value="">Sélectionnez une catégorie</option>
-                                    <option value="Sport">Sport</option>
-                                    <option value="Musique">Musique</option>
-                                    <option value="Art">Art</option>
-                                    <option value="Tech">Tech</option>
-                                    <option value="Business">Business</option>
-                                </select>
-                                @error('categorie')
-                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                                @enderror
-                            </div>
+                    <!-- Catégorie -->
+                    <div class="mb-4">
+                        <label for="categorie" class="block text-sm font-medium text-gray-700">Catégorie</label>
+                        <select name="categorie" 
+                                id="categorie" 
+                                required
+                                class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                            <option value="">Sélectionner une catégorie</option>
+                            <option value="Sport">Sport</option>
+                            <option value="Musique">Musique</option>
+                            <option value="Art">Art</option>
+                            <option value="Tech">Tech</option>
+                            <option value="Business">Business</option>
+                        </select>
+                    </div>
 
-                            <!-- Nombre max de participants -->
-                            <div>
-                                <label for="max_participants" class="block text-sm font-medium text-gray-700">
-                                    Nombre maximum de participants (optionnel)
-                                </label>
-                                <input type="number" name="max_participants" id="max_participants" min="1"
-                                       class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                                @error('max_participants')
-                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                                @enderror
-                            </div>
+                    <!-- Nombre max de participants -->
+                    <div class="mb-6">
+                        <label for="max_participants" class="block text-sm font-medium text-gray-700">
+                            Nombre maximum de participants (optionnel)
+                        </label>
+                        <input type="number" 
+                               name="max_participants" 
+                               id="max_participants" 
+                               min="1"
+                               class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                    </div>
 
-                            <!-- Image -->
-                            <div class="mt-4">
-                                <label for="image" class="block text-sm font-medium text-gray-700">
-                                    Image de l'événement
-                                </label>
-                                <div class="mt-1 flex items-center">
-                                    <input type="file" 
-                                           name="image" 
-                                           id="image"
-                                           accept="image/*"
-                                           class="block w-full text-sm text-gray-500
-                                                  file:mr-4 file:py-2 file:px-4
-                                                  file:rounded-full file:border-0
-                                                  file:text-sm file:font-semibold
-                                                  file:bg-blue-50 file:text-blue-700
-                                                  hover:file:bg-blue-100">
-                                </div>
-                                @error('image')
-                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                                @enderror
-                            </div>
-                        </div>
-
-                        <!-- Boutons d'action -->
-                        <div class="mt-6 flex items-center justify-end gap-3">
-                            <button type="button" @click="showCreateModal = false"
-                                    class="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-500">
-                                Annuler
-                            </button>
-                            <button type="submit"
-                                    class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-                                Créer l'événement
-                            </button>
-                        </div>
-                    </form>
-                </div>
+                    <!-- Boutons d'action -->
+                    <div class="flex items-center justify-end gap-3">
+                        <button type="button" 
+                                @click="showCreateModal = false"
+                                class="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-500">
+                            Annuler
+                        </button>
+                        <button type="submit"
+                                class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                            Créer l'événement
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
@@ -632,18 +624,47 @@ document.addEventListener('alpine:init', () => {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
             },
             body: JSON.stringify({ status: status })
         })
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                // Mettre à jour l'interface
-                this.status = data.status;
+                // Recharger la page pour afficher le nouveau statut
+                window.location.reload();
             } else {
                 alert(data.message);
             }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Une erreur est survenue');
+        });
+    }
+
+    function cancelParticipation(eventId) {
+        if (!confirm('Êtes-vous sûr de vouloir annuler votre participation ?')) {
+            return;
+        }
+
+        fetch(`/events/${eventId}/participate`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                window.location.reload();
+            } else {
+                alert(data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Une erreur est survenue');
         });
     }
     </script>
