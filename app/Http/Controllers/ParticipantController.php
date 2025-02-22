@@ -144,4 +144,24 @@ class ParticipantController extends Controller
             'message' => 'Statut mis à jour avec succès'
         ]);
     }
+
+    public function getParticipants(Event $event)
+    {
+        // Vérifier si l'utilisateur est le créateur de l'événement
+        if ($event->user_id !== auth()->id()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Non autorisé'
+            ], 403);
+        }
+
+        $participants = Participant::with('user')
+            ->where('event_id', $event->id)
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'participants' => $participants
+        ]);
+    }
 }

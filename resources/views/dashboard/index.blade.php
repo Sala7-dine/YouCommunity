@@ -214,53 +214,12 @@
                                                 @endif
                                             </div>
                                         @endif
-
-                                        <!-- Dans la section des cartes d'événements, ajoutez ceci après les informations de l'événement -->
-                                        <div class="mt-4 border-t pt-4">
-                                            <h4 class="text-sm font-semibold text-gray-900 mb-2">Participants</h4>
-                                            <div class="space-y-2">
-                                                @forelse($event->participants as $participant)
-                                                    <div class="flex items-center justify-between bg-gray-50 p-2 rounded-lg">
-                                                        <div class="flex items-center space-x-2">
-                                                            <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
-                                                                <span class="text-blue-600 font-medium text-sm">
-                                                                    {{ substr($participant->user->name, 0, 2) }}
-                                                                </span>
-                                                            </div>
-                                                            <span class="text-sm text-gray-600">{{ $participant->user->name }}</span>
-                                                        </div>
-                                                        <div class="flex items-center space-x-2">
-                                                            @switch($participant->status)
-                                                                @case('pending')
-                                                                    <span class="px-2 py-1 bg-yellow-100 text-yellow-600 rounded text-xs">En attente</span>
-                                                                    <div class="flex space-x-1">
-                                                                        <button onclick="updateParticipationStatus({{ $event->id }}, {{ $participant->user->id }}, 'accepted')"
-                                                                                class="p-1 text-green-600 hover:bg-green-50 rounded">
-                                                                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                                                                            </svg>
-                                                                        </button>
-                                                                        <button onclick="updateParticipationStatus({{ $event->id }}, {{ $participant->user->id }}, 'declined')"
-                                                                                class="p-1 text-red-600 hover:bg-red-50 rounded">
-                                                                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                                                                            </svg>
-                                                                        </button>
-                                                                    </div>
-                                                                    @break
-                                                                @case('accepted')
-                                                                    <span class="px-2 py-1 bg-green-100 text-green-600 rounded text-xs">Confirmé</span>
-                                                                    @break
-                                                                @case('declined')
-                                                                    <span class="px-2 py-1 bg-red-100 text-red-600 rounded text-xs">Refusé</span>
-                                                                    @break
-                                                            @endswitch
-                                                        </div>
-                                                    </div>
-                                                @empty
-                                                    <p class="text-sm text-gray-500 text-center">Aucun participant pour le moment</p>
-                                                @endforelse
-                                            </div>
+                                        
+                                        <div class="mt-4">
+                                            <button onclick="openParticipantsModal({{ $event->id }})"
+                                                    class="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                                                Gérer les participants ({{ $event->participants->count() }})
+                                            </button>
                                         </div>
                                     </div>
                                 </div>
@@ -740,6 +699,138 @@ document.addEventListener('alpine:init', () => {
             alert('Une erreur est survenue');
         });
     }
+    </script>
+
+    <!-- Ajoutez le modal à la fin du body, avant les scripts -->
+    <div id="participantsModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-xl shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] flex flex-col">
+            <!-- En-tête du modal -->
+            <div class="p-6 border-b">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-xl font-semibold text-gray-900">Gestion des participants</h3>
+                    <button onclick="closeParticipantsModal()" class="text-gray-400 hover:text-gray-500">
+                        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Contenu du modal -->
+            <div class="p-6 overflow-y-auto flex-1">
+                <div id="participantsList" class="space-y-3">
+                    <!-- Le contenu sera chargé dynamiquement -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ajoutez ce script à la fin du fichier -->
+    <script>
+    let currentEventId = null;
+
+    function openParticipantsModal(eventId) {
+        currentEventId = eventId;
+        document.getElementById('participantsModal').classList.remove('hidden');
+        document.getElementById('participantsModal').classList.add('flex');
+        loadParticipants(eventId);
+    }
+
+    function closeParticipantsModal() {
+        document.getElementById('participantsModal').classList.add('hidden');
+        document.getElementById('participantsModal').classList.remove('flex');
+        document.getElementById('participantsList').innerHTML = '';
+        currentEventId = null;
+    }
+
+    function loadParticipants(eventId) {
+        const participantsList = document.getElementById('participantsList');
+        participantsList.innerHTML = '<div class="text-center py-4">Chargement...</div>';
+
+        fetch(`/events/${eventId}/participants`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.participants.length === 0) {
+                    participantsList.innerHTML = '<p class="text-center text-gray-500">Aucun participant pour le moment</p>';
+                    return;
+                }
+
+                participantsList.innerHTML = data.participants.map(participant => `
+                    <div class="flex items-center justify-between bg-gray-50 p-4 rounded-lg">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+                                <span class="text-blue-600 font-medium">
+                                    ${participant.user.name.substring(0, 2)}
+                                </span>
+                            </div>
+                            <div>
+                                <h4 class="font-medium text-gray-900">${participant.user.name}</h4>
+                                <p class="text-sm text-gray-500">${participant.user.email}</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            ${getStatusButtons(participant)}
+                        </div>
+                    </div>
+                `).join('');
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                participantsList.innerHTML = '<p class="text-center text-red-500">Une erreur est survenue</p>';
+            });
+    }
+
+    function getStatusButtons(participant) {
+        switch(participant.status) {
+            case 'pending':
+                return `
+                    <button onclick="updateParticipationStatus(${currentEventId}, ${participant.user_id}, 'accepted')"
+                            class="px-3 py-1 bg-green-100 text-green-600 rounded-lg hover:bg-green-200 transition-colors">
+                        Accepter
+                    </button>
+                    <button onclick="updateParticipationStatus(${currentEventId}, ${participant.user_id}, 'declined')"
+                            class="px-3 py-1 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors">
+                        Refuser
+                    </button>
+                `;
+            case 'accepted':
+                return '<span class="px-3 py-1 bg-green-100 text-green-600 rounded-lg">Accepté</span>';
+            case 'declined':
+                return '<span class="px-3 py-1 bg-red-100 text-red-600 rounded-lg">Refusé</span>';
+            default:
+                return '';
+        }
+    }
+
+    function updateParticipationStatus(eventId, userId, status) {
+        fetch(`/events/${eventId}/participants/${userId}`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            },
+            body: JSON.stringify({ status: status })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                loadParticipants(eventId);
+            } else {
+                alert(data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Une erreur est survenue');
+        });
+    }
+
+    // Fermer le modal en cliquant à l'extérieur
+    document.getElementById('participantsModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeParticipantsModal();
+        }
+    });
     </script>
 
 </body>
