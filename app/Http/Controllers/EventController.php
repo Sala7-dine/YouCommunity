@@ -108,22 +108,32 @@ class EventController extends Controller
      * Update the specified resource in storage.
      */
     public function update(Request $request, Event $event)
-    {
-        $request->validate([
-            'titre' => 'required|string|max:255',
-            'description' => 'required',
-            'lieu' => 'required|string',
-            'latitude' => 'required|numeric',
-            'longitude' => 'required|numeric',
-            'date_heure' => 'required|date',
-            'categorie' => 'required|string',
-            'max_participants' => 'nullable|integer|min:1',
-        ]);
-
-        $event->update($request->all());
-
-        return redirect()->route('events.index')->with('success', 'Événement mis à jour.');
+{
+    // Vérifier si l'utilisateur est autorisé à modifier cet événement
+    if ($event->user_id !== auth()->id()) {
+        return redirect()->route('dashboard')
+            ->with('error', 'Vous n\'êtes pas autorisé à modifier cet événement.');
     }
+
+    $validated = $request->validate([
+        'titre' => 'required|string|max:255',
+        'description' => 'required|string',
+        'lieu' => 'required|string',
+        'date_heure' => 'required|date',
+        'categorie' => 'required|string',
+        'max_participants' => 'nullable|integer|min:1',
+    ]);
+
+    try {
+        $event->update($validated);
+
+        return redirect()->route('dashboard')
+            ->with('success', 'L\'événement a été mis à jour avec succès.');
+    } catch (\Exception $e) {
+        return redirect()->route('dashboard')
+            ->with('error', 'Une erreur est survenue lors de la mise à jour de l\'événement.');
+    }
+}
 
     /**
      * Remove the specified resource from storage.

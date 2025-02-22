@@ -7,7 +7,11 @@
     @vite('resources/css/app.css')
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
-<body class="font-['Plus_Jakarta_Sans'] bg-gray-100" x-data="{ showCreateModal: false }">
+<body class="font-['Plus_Jakarta_Sans'] bg-gray-100" x-data="{ 
+    showCreateModal: false, 
+    showEditModal: false,
+    editingEvent: null
+}">
     <div class="min-h-screen flex">
         <!-- Sidebar -->
         <div class="w-64 bg-white border-r hidden lg:block">
@@ -185,13 +189,13 @@
                                         </span>
                                         <div class="opacity-0 group-hover:opacity-100 transition-opacity">
                                             <div class="flex items-center gap-2">
-                                                <a href="{{ route('events.edit', $event) }}" 
-                                                   class="p-2 text-white/80 hover:text-white rounded-lg hover:bg-white/20">
+                                                <button @click="showEditModal = true; editingEvent = {{ $event }}" 
+                                                        class="p-2 text-white/80 hover:text-white rounded-lg hover:bg-white/20">
                                                     <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
                                                               d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
                                                     </svg>
-                                                </a>
+                                                </button>
                                                 <button onclick="showDeleteModal({{ $event->id }})"
                                                         class="p-2 text-white/80 hover:text-white rounded-lg hover:bg-white/20">
                                                     <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -417,6 +421,150 @@
         </div>
     </div>
 
+    <!-- Modale de modification -->
+    <div x-show="showEditModal" 
+         x-cloak
+         class="fixed inset-0 z-50 overflow-y-auto"
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0">
+        
+        <!-- Overlay -->
+        <div class="fixed inset-0 bg-black bg-opacity-50" @click="showEditModal = false"></div>
+
+        <!-- Contenu de la modale -->
+        <div class="relative min-h-screen flex items-center justify-center p-4">
+            <div class="relative bg-white rounded-2xl shadow-xl w-full max-w-2xl">
+                <!-- En-tête de la modale -->
+                <div class="flex items-center justify-between p-6 border-b">
+                    <h2 class="text-xl font-semibold text-gray-900">Modifier l'événement</h2>
+                    <button @click="showEditModal = false" class="text-gray-400 hover:text-gray-500">
+                        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Formulaire de modification -->
+                <form x-bind:action="'/events/' + editingEvent.id" 
+                      method="POST" 
+                      class="p-6">
+                    @csrf
+                    @method('PUT')
+                    
+                    <div class="space-y-6">
+                        <!-- Titre -->
+                        <div>
+                            <label for="edit_titre" class="block text-sm font-medium text-gray-700">Titre</label>
+                            <input type="text" 
+                                   name="titre" 
+                                   id="edit_titre" 
+                                   x-model="editingEvent.titre"
+                                   required
+                                   class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                            @error('titre')
+                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        <!-- Description -->
+                        <div>
+                            <label for="edit_description" class="block text-sm font-medium text-gray-700">Description</label>
+                            <textarea name="description" 
+                                      id="edit_description" 
+                                      x-model="editingEvent.description"
+                                      rows="3" 
+                                      required
+                                      class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"></textarea>
+                            @error('description')
+                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        <!-- Lieu -->
+                        <div>
+                            <label for="edit_lieu" class="block text-sm font-medium text-gray-700">Lieu</label>
+                            <input type="text" 
+                                   name="lieu" 
+                                   id="edit_lieu" 
+                                   x-model="editingEvent.lieu"
+                                   required
+                                   class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                            @error('lieu')
+                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        <!-- Date et heure -->
+                        <div>
+                            <label for="edit_date_heure" class="block text-sm font-medium text-gray-700">Date et heure</label>
+                            <input type="datetime-local" 
+                                   name="date_heure" 
+                                   id="edit_date_heure" 
+                                   x-model="editingEvent.date_heure"
+                                   required
+                                   class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                            @error('date_heure')
+                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        <!-- Catégorie -->
+                        <div>
+                            <label for="edit_categorie" class="block text-sm font-medium text-gray-700">Catégorie</label>
+                            <select name="categorie" 
+                                    id="edit_categorie" 
+                                    x-model="editingEvent.categorie"
+                                    required
+                                    class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                <option value="Sport">Sport</option>
+                                <option value="Musique">Musique</option>
+                                <option value="Art">Art</option>
+                                <option value="Tech">Tech</option>
+                                <option value="Business">Business</option>
+                            </select>
+                            @error('categorie')
+                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        <!-- Nombre max de participants -->
+                        <div>
+                            <label for="edit_max_participants" class="block text-sm font-medium text-gray-700">
+                                Nombre maximum de participants (optionnel)
+                            </label>
+                            <input type="number" 
+                                   name="max_participants" 
+                                   id="edit_max_participants" 
+                                   x-model="editingEvent.max_participants"
+                                   min="1"
+                                   class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                            @error('max_participants')
+                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                            @enderror
+                        </div>
+                    </div>
+
+                    <!-- Boutons d'action -->
+                    <div class="mt-6 flex items-center justify-end gap-3">
+                        <button type="button" 
+                                @click="showEditModal = false"
+                                class="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-500">
+                            Annuler
+                        </button>
+                        <button type="submit"
+                                class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                            Mettre à jour
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <!-- Ajouter le JavaScript pour la modale -->
     <script>
         function showDeleteModal(eventId) {
@@ -485,6 +633,19 @@
             });
         }
     </script>
+
+<script>
+document.addEventListener('alpine:init', () => {
+    Alpine.data('editingEvent', () => ({
+        formatDateForInput(dateString) {
+            if (!dateString) return '';
+            const date = new Date(dateString);
+            return date.toISOString().slice(0, 16);
+        }
+    }));
+});
+</script>
+
     <script src="https://maps.googleapis.com/maps/api/js?key=VOTRE_CLE_API&libraries=places&callback=initAutocomplete" async defer></script>
 
     <!-- Ajouter ces styles dans votre head ou fichier CSS -->
