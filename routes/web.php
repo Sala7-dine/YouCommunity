@@ -27,6 +27,11 @@ Route::middleware('auth')->group(function () {
     Route::get('/discover', [EventController::class, 'discover'])->name('events.discover');
 
     Route::get('/events/{event}', [EventController::class, 'show'])->name('events.show');
+
+    Route::get('/participations', [ParticipantController::class, 'index'])->name('participations.index');
+
+    Route::patch('/events/{event}/participants/{user}', [ParticipantController::class, 'updateStatus'])
+        ->name('participants.update-status');
 });
 
 require __DIR__.'/auth.php';

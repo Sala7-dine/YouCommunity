@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\Event;
 use App\Models\Participant;
+use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class ParticipantController extends Controller
 {
@@ -13,7 +15,13 @@ class ParticipantController extends Controller
      */
     public function index()
     {
-        //
+        $participations = Participant::with(['event', 'event.user'])
+            ->where('user_id', Auth::id())
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->groupBy('status');
+
+        return view('dashboard.participant', compact('participations'));
     }
 
     /**
@@ -102,6 +110,38 @@ class ParticipantController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Participation annulée'
+        ]);
+    }
+
+    public function updateStatus(Event $event, User $user, Request $request)
+    {
+        // Vérifier si l'utilisateur connecté est le créateur de l'événement
+        if ($event->user_id !== auth()->id()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Non autorisé'
+            ], 403);
+        }
+
+        $participant = Participant::where([
+            'event_id' => $event->id,
+            'user_id' => $user->id
+        ])->first();
+
+        if (!$participant) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Participation non trouvée'
+            ], 404);
+        }
+
+        $participant->update([
+            'status' => $request->status
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Statut mis à jour avec succès'
         ]);
     }
 }

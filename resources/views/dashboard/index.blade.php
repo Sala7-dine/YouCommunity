@@ -214,6 +214,54 @@
                                                 @endif
                                             </div>
                                         @endif
+
+                                        <!-- Dans la section des cartes d'événements, ajoutez ceci après les informations de l'événement -->
+                                        <div class="mt-4 border-t pt-4">
+                                            <h4 class="text-sm font-semibold text-gray-900 mb-2">Participants</h4>
+                                            <div class="space-y-2">
+                                                @forelse($event->participants as $participant)
+                                                    <div class="flex items-center justify-between bg-gray-50 p-2 rounded-lg">
+                                                        <div class="flex items-center space-x-2">
+                                                            <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
+                                                                <span class="text-blue-600 font-medium text-sm">
+                                                                    {{ substr($participant->user->name, 0, 2) }}
+                                                                </span>
+                                                            </div>
+                                                            <span class="text-sm text-gray-600">{{ $participant->user->name }}</span>
+                                                        </div>
+                                                        <div class="flex items-center space-x-2">
+                                                            @switch($participant->status)
+                                                                @case('pending')
+                                                                    <span class="px-2 py-1 bg-yellow-100 text-yellow-600 rounded text-xs">En attente</span>
+                                                                    <div class="flex space-x-1">
+                                                                        <button onclick="updateParticipationStatus({{ $event->id }}, {{ $participant->user->id }}, 'accepted')"
+                                                                                class="p-1 text-green-600 hover:bg-green-50 rounded">
+                                                                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                                                            </svg>
+                                                                        </button>
+                                                                        <button onclick="updateParticipationStatus({{ $event->id }}, {{ $participant->user->id }}, 'declined')"
+                                                                                class="p-1 text-red-600 hover:bg-red-50 rounded">
+                                                                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                                                            </svg>
+                                                                        </button>
+                                                                    </div>
+                                                                    @break
+                                                                @case('accepted')
+                                                                    <span class="px-2 py-1 bg-green-100 text-green-600 rounded text-xs">Confirmé</span>
+                                                                    @break
+                                                                @case('declined')
+                                                                    <span class="px-2 py-1 bg-red-100 text-red-600 rounded text-xs">Refusé</span>
+                                                                    @break
+                                                            @endswitch
+                                                        </div>
+                                                    </div>
+                                                @empty
+                                                    <p class="text-sm text-gray-500 text-center">Aucun participant pour le moment</p>
+                                                @endforelse
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -653,6 +701,31 @@ document.addEventListener('alpine:init', () => {
             headers: {
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
             }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                window.location.reload();
+            } else {
+                alert(data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Une erreur est survenue');
+        });
+    }
+    </script>
+
+    <script>
+    function updateParticipationStatus(eventId, userId, status) {
+        fetch(`/events/${eventId}/participants/${userId}`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            },
+            body: JSON.stringify({ status: status })
         })
         .then(response => response.json())
         .then(data => {

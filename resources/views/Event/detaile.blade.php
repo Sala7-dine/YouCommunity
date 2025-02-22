@@ -37,6 +37,8 @@
         </div>
     </nav>
 
+
+
     <!-- Hero Event -->
     <div class="relative h-[400px]">
         <div class="absolute inset-0">
