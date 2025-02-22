@@ -52,4 +52,9 @@ class Event extends Model
         return $participant ? $participant->status : null;
     }
 
+    public function comments()
+    {
+        return $this->hasMany(Comment::class);
+    }
+
 }

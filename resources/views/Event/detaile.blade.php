@@ -220,6 +220,70 @@
         </div>
     </div>
 
+    <!-- Commentaires -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="bg-white rounded-xl shadow-sm p-6">
+            <h2 class="text-xl font-semibold mb-6">Commentaires</h2>
+
+            @auth
+                <!-- Formulaire de commentaire -->
+                <div class="mb-8">
+                    <form id="commentForm" class="space-y-4">
+                        <div>
+                            <textarea id="commentContent" 
+                                     rows="3" 
+                                     class="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                                     placeholder="Ajouter un commentaire..."></textarea>
+                        </div>
+                        <div class="flex justify-end">
+                            <button type="submit" 
+                                    class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                                Publier
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            @else
+                <div class="mb-8 p-4 bg-gray-50 rounded-lg text-center">
+                    <p class="text-gray-600">
+                        <a href="{{ route('login') }}" class="text-blue-600 hover:underline">Connectez-vous</a>
+                        pour laisser un commentaire
+                    </p>
+                </div>
+            @endauth
+
+            <!-- Liste des commentaires -->
+            <div id="commentsList" class="space-y-6">
+                @foreach($event->comments()->with('user')->latest()->get() as $comment)
+                    <div class="comment-item" data-comment-id="{{ $comment->id }}">
+                        <div class="flex space-x-4">
+                            <div class="flex-shrink-0">
+                                <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+                                    <span class="text-blue-600 font-medium">
+                                        {{ substr($comment->user->name, 0, 2) }}
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="flex-grow">
+                                <div class="flex items-center justify-between">
+                                    <h4 class="font-medium text-gray-900">{{ $comment->user->name }}</h4>
+                                    <span class="text-sm text-gray-500">{{ $comment->created_at->diffForHumans() }}</span>
+                                </div>
+                                <p class="mt-1 text-gray-600">{{ $comment->content }}</p>
+                                @if(Auth::id() === $comment->user_id)
+                                    <button onclick="deleteComment({{ $comment->id }})"
+                                            class="mt-2 text-sm text-red-600 hover:text-red-700">
+                                        Supprimer
+                                    </button>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+        </div>
+    </div>
+
     <!-- Footer -->
     <footer class="border-t py-12">
         <div class="max-w-7xl mx-auto px-8">
@@ -278,6 +342,84 @@
                 alert('Une erreur est survenue');
             });
         }
+    </script>
+
+    <!-- Scripts pour les commentaires -->
+    <script>
+    document.getElementById('commentForm')?.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const content = document.getElementById('commentContent').value;
+        if (!content.trim()) return;
+
+        fetch(`/events/{{ $event->id }}/comments`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            },
+            body: JSON.stringify({ content: content })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Ajouter le nouveau commentaire à la liste
+                const commentHTML = `
+                    <div class="comment-item" data-comment-id="${data.comment.id}">
+                        <div class="flex space-x-4">
+                            <div class="flex-shrink-0">
+                                <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+                                    <span class="text-blue-600 font-medium">${data.comment.user.initials}</span>
+                                </div>
+                            </div>
+                            <div class="flex-grow">
+                                <div class="flex items-center justify-between">
+                                    <h4 class="font-medium text-gray-900">${data.comment.user.name}</h4>
+                                    <span class="text-sm text-gray-500">${data.comment.created_at}</span>
+                                </div>
+                                <p class="mt-1 text-gray-600">${data.comment.content}</p>
+                                <button onclick="deleteComment(${data.comment.id})"
+                                        class="mt-2 text-sm text-red-600 hover:text-red-700">
+                                    Supprimer
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                document.getElementById('commentsList').insertAdjacentHTML('afterbegin', commentHTML);
+                document.getElementById('commentContent').value = '';
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Une erreur est survenue');
+        });
+    });
+
+    function deleteComment(commentId) {
+        if (!confirm('Êtes-vous sûr de vouloir supprimer ce commentaire ?')) {
+            return;
+        }
+
+        fetch(`/comments/${commentId}`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                document.querySelector(`[data-comment-id="${commentId}"]`).remove();
+            } else {
+                alert(data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Une erreur est survenue');
+        });
+    }
     </script>
 </body>
 </html>
